@@ -34,7 +34,7 @@ if st.button("Analizar Oración"):
         st.warning("Por favor, escribe una oración.")
     elif not api_key:
         st.sidebar.error("Error: Por favor, introduce tu Gemini API Key en la barra lateral.")
-        st.error("Error: GEMINI_API_KEY no está configurada en las variables de entorno ni en la barra lateral.")
+        st.error("Error: GEMINI_API_KEY no está configurada.")
     else:
         with st.spinner("Analizando oración y calculando niveles..."):
             
@@ -76,7 +76,7 @@ REGLAS PEDAGÓGICAS Y ESTRUCTURALES OBLIGATORIAS:
    - "cOrac" (Gris): La línea general "Oración Compuesta" / "Oración Simple" y Nexos (Nx).
 """
 
-            # 3. Llamada a la API de Gemini
+            # 3. Llamada a la API de Gemini con captura detallada de errores
             url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
             payload = {
                 "contents": [{"parts": [{"text": prompt}]}],
@@ -84,23 +84,24 @@ REGLAS PEDAGÓGICAS Y ESTRUCTURALES OBLIGATORIAS:
             }
             headers = {"Content-Type": "application/json"}
 
-            # Reintentos automáticos para evitar errores 503
             res_data = None
+            error_detalles = ""
             for intento in range(3):
                 response = requests.post(url, json=payload, headers=headers)
                 if response.status_code == 200:
                     res_data = response.json()
                     break
-                elif response.status_code == 503:
-                    time.sleep(2)
+                else:
+                    error_detalles = response.text
+                    if response.status_code == 503:
+                        time.sleep(2)
 
-if res_data and "candidates" in res_data:
-    json_text = res_data['candidates'][0]['content']['parts'][0]['text']
-    data = json.loads(json_text)
-    # ... (resto de tu lógica de análisis y TikZ) ...
-else:
-    # ESTO TE MOSTRARÁ EL MOTIVO EXACTO DE GOOGLE EN LA PANTALLA
-    st.error(f"Respuesta de la API de Google: {response.status_code} - {response.text}")
+            if res_data and "candidates" in res_data:
+                json_text = res_data['candidates'][0]['content']['parts'][0]['text']
+                data = json.loads(json_text)
+
+                words = data.get("words", [])
+                analysis = data.get("analysis", [])
 
                 # 4. ALGORITMO DE AUTOCORRECCIÓN DE NIVEL EN PYTHON
                 changed = True
@@ -209,4 +210,4 @@ else:
                 else:
                     st.error("Error al generar la imagen. Revisa la compilación de LaTeX.")
             else:
-                st.error("No se pudo obtener respuesta válida de Gemini.")
+                st.error(f"Error de la API de Gemini: {error_detalles}")
