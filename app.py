@@ -26,7 +26,7 @@ if not api_key:
 # Campo de texto para la oración
 oracion = st.text_input(
     "Introduce la oración a analizar:", 
-    value=" "
+    value=""
 )
 
 if st.button("Analizar Oración"):
@@ -77,12 +77,12 @@ REGLAS PEDAGÓGICAS Y ESTRUCTURALES OBLIGATORIAS:
 """
 
             # 3. Llamada a la API de Gemini
-url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
-payload = {
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+            payload = {
                 "contents": [{"parts": [{"text": prompt}]}],
                 "generationConfig": {"response_mime_type": "application/json"}
             }
-headers = {"Content-Type": "application/json"}
+            headers = {"Content-Type": "application/json"}
 
             # Reintentos automáticos para evitar errores 503
             res_data = None
@@ -164,11 +164,11 @@ headers = {"Content-Type": "application/json"}
 
 \\pagecolor{{white}}
 
-\\definecolor{{cSuj}}{{RGB}}{{37, 99, 235}}   % Azul
-\\definecolor{{cNuc}}{{RGB}}{{196, 30, 58}}   % Rojo
-\\definecolor{{cObl}}{{RGB}}{{217, 119, 6}}   % Naranja
-\\definecolor{{cOpt}}{{RGB}}{{22, 128, 61}}   % Verde
-\\definecolor{{cOrac}}{{RGB}}{{31, 41, 55}}   % Gris
+\\definecolor{{cSuj}}{{RGB}}{{37, 99, 235}}    % Azul
+\\definecolor{{cNuc}}{{RGB}}{{196, 30, 58}}    % Rojo
+\\definecolor{{cObl}}{{RGB}}{{217, 119, 6}}    % Naranja
+\\definecolor{{cOpt}}{{RGB}}{{22, 128, 61}}    % Verde
+\\definecolor{{cOrac}}{{RGB}}{{31, 41, 55}}    % Gris
 
 \\begin{{document}}
 \\begin{{tikzpicture}}[
