@@ -1,0 +1,104 @@
+\documentclass[tikz,border=20pt]{standalone}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage{xcolor}
+\usepackage{amssymb}
+\usetikzlibrary{calc,positioning}
+
+\pagecolor{white}
+
+\definecolor{cSuj}{RGB}{37, 99, 235}   % Azul
+\definecolor{cNuc}{RGB}{196, 30, 58}   % Rojo
+\definecolor{cObl}{RGB}{217, 119, 6}   % Naranja
+\definecolor{cOpt}{RGB}{22, 128, 61}   % Verde
+\definecolor{cOrac}{RGB}{31, 41, 55}   % Gris
+
+\begin{document}
+\begin{tikzpicture}[
+    node distance=0.45cm,
+    word/.style={font=\bfseries\Large, inner xsep=4pt, inner ysep=2pt},
+    tag/.style={font=\small\bfseries, inner sep=2pt}
+]
+
+    \node (w0) [word] {La};
+    \node (w1) [word, right=of w0] {materia};
+    \node (w2) [word, right=of w1] {orgánica};
+    \node (w3) [word, right=of w2] {es};
+    \node (w4) [word, right=of w3] {la};
+    \node (w5) [word, right=of w4] {que};
+    \node (w6) [word, right=of w5] {se};
+    \node (w7) [word, right=of w6] {quema};
+    \node (w8) [word, right=of w7] {para};
+    \node (w9) [word, right=of w8] {liberar};
+    \node (w10) [word, right=of w9] {la};
+    \node (w11) [word, right=of w10] {energía};
+    \node (w12) [word, right=of w11] {que};
+    \node (w13) [word, right=of w12] {contiene};
+    \node (w14) [word, right=of w13] {en};
+    \node (w15) [word, right=of w14] {su};
+    \node (w16) [word, right=of w15] {interior};
+    \node (w17) [word, right=of w16] {,};
+    \node (w18) [word, right=of w17] {nos};
+    \node (w19) [word, right=of w18] {comenta};
+    \node (w20) [word, right=of w19] {el};
+    \node (w21) [word, right=of w20] {autor};
+    \coordinate (y1) at (0, -0.85);
+    \coordinate (y2) at (0, -1.70);
+    \coordinate (y3) at (0, -2.55);
+    \coordinate (y4) at (0, -3.40);
+    \coordinate (y5) at (0, -4.25);
+    \coordinate (y6) at (0, -5.10);
+    \coordinate (y7) at (0, -5.95);
+    \coordinate (y8) at (0, -6.80);
+    \coordinate (y9) at (0, -7.65);
+    \coordinate (y10) at (0, -8.50);
+    \coordinate (y11) at (0, -9.35);
+    \coordinate (y12) at (0, -10.20);
+    \coordinate (y13) at (0, -11.05);
+    \coordinate (y14) at (0, -11.90);
+    \coordinate (y15) at (0, -12.75);
+    \coordinate (y16) at (0, -13.60);
+    \draw[cSuj, line width=1.3pt] (w0.west |- y1) -- (w0.east |- y1) node[midway, below, tag, cSuj] {D};
+    \draw[cSuj, line width=1.3pt] (w1.west |- y1) -- (w1.east |- y1) node[midway, below, tag, cSuj] {N};
+    \draw[cSuj, line width=1.3pt] (w2.west |- y1) -- (w2.east |- y1) node[midway, below, tag, cSuj] {Ady};
+    \draw[cNuc, line width=1.3pt] (w3.west |- y1) -- (w3.east |- y1) node[midway, below, tag, cNuc] {V / Cóp.};
+    \draw[cObl, line width=1.3pt] (w4.west |- y1) -- (w4.east |- y1) node[midway, below, tag, cObl] {N / Pron.};
+    \draw[cOpt, line width=1.3pt] (w5.west |- y1) -- (w5.east |- y1) node[midway, below, tag, cOpt] {Nx / SN / Suj};
+    \draw[cNuc, line width=1.3pt] (w6.west |- y1) -- (w6.east |- y1) node[midway, below, tag, cNuc] {Mrf};
+    \draw[cNuc, line width=1.3pt] (w7.west |- y1) -- (w7.east |- y1) node[midway, below, tag, cNuc] {V};
+    \draw[cOpt, line width=1.3pt] (w8.west |- y1) -- (w8.east |- y1) node[midway, below, tag, cOpt] {E};
+    \draw[cNuc, line width=1.3pt] (w9.west |- y1) -- (w9.east |- y1) node[midway, below, tag, cNuc] {V};
+    \draw[cObl, line width=1.3pt] (w10.west |- y1) -- (w10.east |- y1) node[midway, below, tag, cObl] {D};
+    \draw[cObl, line width=1.3pt] (w11.west |- y1) -- (w11.east |- y1) node[midway, below, tag, cObl] {N};
+    \draw[cOpt, line width=1.3pt] (w12.west |- y1) -- (w12.east |- y1) node[midway, below, tag, cOpt] {Nx / SN / Suj};
+    \draw[cNuc, line width=1.3pt] (w13.west |- y1) -- (w13.east |- y1) node[midway, below, tag, cNuc] {V};
+    \draw[cOpt, line width=1.3pt] (w14.west |- y1) -- (w14.east |- y1) node[midway, below, tag, cOpt] {E};
+    \draw[cOpt, line width=1.3pt] (w15.west |- y1) -- (w15.east |- y1) node[midway, below, tag, cOpt] {D};
+    \draw[cOpt, line width=1.3pt] (w16.west |- y1) -- (w16.east |- y1) node[midway, below, tag, cOpt] {N};
+    \draw[cOrac, line width=1.3pt] (w17.west |- y1) -- (w17.east |- y1) node[midway, below, tag, cOrac] {Px};
+    \draw[cObl, line width=1.3pt] (w18.west |- y1) -- (w18.east |- y1) node[midway, below, tag, cObl] {Pron};
+    \draw[cNuc, line width=1.3pt] (w19.west |- y1) -- (w19.east |- y1) node[midway, below, tag, cNuc] {V};
+    \draw[cSuj, line width=1.3pt] (w20.west |- y1) -- (w20.east |- y1) node[midway, below, tag, cSuj] {D};
+    \draw[cSuj, line width=1.3pt] (w21.west |- y1) -- (w21.east |- y1) node[midway, below, tag, cSuj] {N};
+    \draw[cOpt, line width=1.3pt] (w15.west |- y2) -- (w16.east |- y2) node[midway, below, tag, cOpt] {SN / T};
+    \draw[cOpt, line width=1.3pt] (w14.west |- y3) -- (w16.east |- y3) node[midway, below, tag, cOpt] {SPre / CC Lugar};
+    \draw[cNuc, line width=1.3pt] (w13.west |- y4) -- (w16.east |- y4) node[midway, below, tag, cNuc] {SV / PV (SO: ella - "que")};
+    \draw[cOpt, line width=1.3pt] (w12.west |- y5) -- (w16.east |- y5) node[midway, below, tag, cOpt] {Subordinada Adjetiva / CN};
+    \draw[cObl, line width=1.3pt] (w10.west |- y6) -- (w16.east |- y6) node[midway, below, tag, cObl] {SN / CD};
+    \draw[cOpt, line width=1.3pt] (w9.west |- y7) -- (w16.east |- y7) node[midway, below, tag, cOpt] {SV / PV (Infinitivo) / T};
+    \draw[cOpt, line width=1.3pt] (w8.west |- y8) -- (w16.east |- y8) node[midway, below, tag, cOpt] {SAdv / CC Final};
+    \draw[cNuc, line width=1.3pt] (w6.west |- y9) -- (w16.east |- y9) node[midway, below, tag, cNuc] {SV / PV (SO: ella - "que")};
+    \draw[cOpt, line width=1.3pt] (w5.west |- y10) -- (w16.east |- y10) node[midway, below, tag, cOpt] {Subordinada Adjetiva / CN};
+    \draw[cObl, line width=1.3pt] (w4.west |- y11) -- (w16.east |- y11) node[midway, below, tag, cObl] {SN / Atributo};
+    \draw[cNuc, line width=1.3pt] (w3.west |- y12) -- (w16.east |- y12) node[midway, below, tag, cNuc] {SV / PN};
+    \draw[cSuj, line width=1.3pt] (w0.west |- y2) -- (w2.east |- y2) node[midway, below, tag, cSuj] {SN / Suj};
+    \draw[cObl, line width=1.3pt] (w0.west |- y13) -- (w16.east |- y13) node[midway, below, tag, cObl] {Subordinada Sustantiva / CD};
+    \draw[cSuj, line width=1.3pt] (w20.west |- y14) -- (w21.east |- y14) node[midway, below, tag, cSuj] {SN / Suj};
+    \draw[cObl, line width=1.3pt] (w18.west |- y14) -- (w18.east |- y14) node[midway, below, tag, cObl] {SN / CI};
+    \draw[cNuc, line width=1.3pt] (w18.west |- y15) -- (w21.east |- y15) node[midway, below, tag, cNuc] {SV / PV (SO: él - "el autor")};
+    \draw[cOrac, line width=1.3pt] (w0.west |- y16) -- (w21.east |- y16) node[midway, below, tag, cOrac] {Oración Compuesta};
+
+\end{tikzpicture}
+\end{document}
