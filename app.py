@@ -77,7 +77,7 @@ REGLAS PEDAGÓGICAS Y ESTRUCTURALES OBLIGATORIAS:
 """
 
             # 3. Llamada a la API de Gemini
-           url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
             payload = {
                 "contents": [{"parts": [{"text": prompt}]}],
                 "generationConfig": {"response_mime_type": "application/json"}
