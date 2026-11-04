@@ -86,21 +86,24 @@ REGLAS PEDAGÓGICAS Y ESTRUCTURALES OBLIGATORIAS:
 
             # Reintentos automáticos para evitar errores 503
             res_data = None
+            error_detalles = ""
             for intento in range(3):
                 response = requests.post(url, json=payload, headers=headers)
                 if response.status_code == 200:
                     res_data = response.json()
                     break
-                elif response.status_code == 503:
-                    time.sleep(2)
+                else:
+                    error_detalles = response.text
+                    if response.status_code == 503:
+                        time.sleep(2)
 
             if res_data and "candidates" in res_data:
                 json_text = res_data['candidates'][0]['content']['parts'][0]['text']
-                data = json.loads(json_text)
-
-                words = data.get("words", [])
-                analysis = data.get("analysis", [])
-
+                # ... (el resto de tu código de análisis y TikZ sigue exactamente igual aquí abajo) ...
+            else:
+                # Esto mostrará en pantalla el motivo exacto que da Google
+                st.error(f"Error de la API de Gemini (Código HTTP). Detalles: {error_detalles}")
+                
                 # 4. ALGORITMO DE AUTOCORRECCIÓN DE NIVEL EN PYTHON
                 changed = True
                 while changed:
