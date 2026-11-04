@@ -1,0 +1,4 @@
+texlive-latex-base
+texlive-pictures
+texlive-latex-extra
+poppler-utils
