@@ -14,10 +14,14 @@ st.title("📐 Generador de Cajas Sintácticas")
 st.sidebar.header("⚙️ Configuración")
 user_api_key = st.sidebar.text_input("Introduce tu Gemini API Key:", type="password")
 
-# Prioriza la clave introducida en la web, si no, busca la variable de entorno por defecto
-api_key = user_api_key if user_api_key else os.getenv("GEMINI_API_KEY", "")
-api_key = api_key.strip().strip('"').strip("'")
+# Solo usa la clave introducida por el usuario en la interfaz web
+api_key = user_api_key.strip().strip('"').strip("'")
 api_key = re.sub(r'[^\w\.-]', '', api_key)
+
+# Si no introduce nada, la app se detiene y le avisa amablemente en pantalla
+if not api_key:
+    st.warning("Por favor, introduce tu Gemini API Key en el menú lateral para poder utilizar la aplicación.")
+    st.stop()
 
 # Campo de texto para la oración
 oracion = st.text_input(
