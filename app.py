@@ -88,4 +88,4 @@ REGLAS PEDAGÓGICAS Y ESTRUCTURALES OBLIGATORIAS:
             error_detalles = ""
             for intento in range(3):
                 response = requests.post(url, json=payload, headers=headers)
-                if response.status_code == 200
+                if response.status_code == 200:
