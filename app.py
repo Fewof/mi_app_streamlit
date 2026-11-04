@@ -95,11 +95,12 @@ REGLAS PEDAGÓGICAS Y ESTRUCTURALES OBLIGATORIAS:
                     time.sleep(2)
 
             if res_data and "candidates" in res_data:
-                json_text = res_data['candidates'][0]['content']['parts'][0]['text']
-                data = json.loads(json_text)
-
-                words = data.get("words", [])
-                analysis = data.get("analysis", [])
+                            json_text = res_data['candidates'][0]['content']['parts'][0]['text']
+                            data = json.loads(json_text)
+                            # ... (resto de tu lógica de análisis y TikZ) ...
+                        else:
+                            # ESTO TE MOSTRARÁ EL MOTIVO EXACTO DE GOOGLE EN LA PANTALLA
+                            st.error(f"Respuesta de la API de Google: {response.status_code} - {response.text}")
 
                 # 4. ALGORITMO DE AUTOCORRECCIÓN DE NIVEL EN PYTHON
                 changed = True
