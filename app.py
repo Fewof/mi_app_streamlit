@@ -7,18 +7,16 @@ import re
 import time
 
 # Configuración de la página
-st.set_page_config(page_title="Analizador Sintáctico - Bachillerato", layout="wide")
-st.title("📐 Generador de Cajas Sintácticas")
+st.set_page_config(page_title="Analizador Sintáctico - Bachillerato NGLE", layout="wide")
+st.title("📐 Generador de Cajas Sintácticas (Rigurosidad NGLE)")
 
 # --- Configuración de la API Key en la barra lateral (para uso web) ---
 st.sidebar.header("⚙️ Configuración")
 user_api_key = st.sidebar.text_input("Introduce tu Gemini API Key:", type="password")
 
-# Solo usa la clave introducida por el usuario en la interfaz web
 api_key = user_api_key.strip().strip('"').strip("'")
 api_key = re.sub(r'[^\w\.-]', '', api_key)
 
-# Si no introduce nada, la app se detiene y le avisa amablemente en pantalla
 if not api_key:
     st.warning("Por favor, introduce tu Gemini API Key en el menú lateral para poder utilizar la aplicación.")
     st.stop()
@@ -26,7 +24,7 @@ if not api_key:
 # Campo de texto para la oración
 oracion = st.text_input(
     "Introduce la oración a analizar:", 
-    value=""
+    value="La materia orgánica es la que se quema para liberar la energía que contiene en su interior, nos comenta el autor"
 )
 
 if st.button("Analizar Oración"):
@@ -36,37 +34,44 @@ if st.button("Analizar Oración"):
         st.sidebar.error("Error: Por favor, introduce tu Gemini API Key en la barra lateral.")
         st.error("Error: GEMINI_API_KEY no está configurada.")
     else:
-        with st.spinner("Analizando oración y calculando niveles (buscando ruta óptima)..."):
+        with st.spinner("Analizando sintaxis bajo criterios estrictos de la NGLE..."):
             
             # 1. Borrar archivos temporales antiguos
             for f in ["analisis.pdf", "analisis_out.png", "analisis.tex"]:
                 if os.path.exists(f):
                     os.remove(f)
 
-# 2. Prompt pedagógico compacto y riguroso (NGLE / 1º Bachillerato)
-            prompt = f"""Analiza sintácticamente según la NGLE (RAE) la oración: "{oracion}".
-Devuelve ÚNICAMENTE un JSON válido con esta estructura:
+            # 2. Prompt estricto NGLE / RAE enfocado a evitar solapamientos
+            prompt = f"""
+Actúa como un catedrático experto en la Nueva Gramática de la Lengua Española (NGLE) de la RAE.
+Analiza sintácticamente la oración: "{oracion}".
+
+Devuelve ÚNICAMENTE un objeto JSON válido con esta estructura estricta:
 {{
-  "words": ["palabra1", "palabra2"],
+  "words": ["palabra1", "palabra2", ...],
   "analysis": [
     {{"level": 1, "start": 0, "end": 0, "label": "D", "color": "cSuj"}},
-    {{"level": 1, "start": 1, "end": 1, "label": "N", "color": "cSuj"}}
+    {{"level": 2, "start": 0, "end": 2, "label": "SN / Sujeto", "color": "cSuj"}}
   ]
 }}
-REGLAS:
-1. Aplique criterios estrictos de la NGLE (delimitación de proposiciones subordinadas, nexos Nx, perífrasis, etc.).
-2. Si no hay sujeto explícito, indique el Sujeto Omitido en el Predicado (ej: "SV / PV (SO: él)").
-3. Jerarquía de niveles (level): Level 1 = palabras; Level 2+ = sintagmas y complementos. Las cajas contenedoras deben tener level superior a las contenidas.
-4. Colores: "cSuj" (Azul-Sujeto), "cNuc" (Rojo-Predicado/Verbo), "cObl" (Naranja-Argumentales/CD/CI/Atrib), "cOpt" (Verde-CC/Adjuntos), "cOrac" (Gris-Oración/Nexos)."""
 
-            # 3. Lista de modelos en cascada (Fallback automático ante saturación)
-            # Si el primero falla por tráfico (429/503), prueba automáticamente con los siguientes.
-            modelos_disponibles = [
-                "gemini-1.5-flash",
-                "gemini-2.5-flash",
-                "gemini-1.5-pro"
-            ]
+REGLAS DE ORO PARA EVITAR SOLAPAMIENTOS Y ERRORES:
+1. Índices precisos: "start" y "end" son los índices numéricos exactos de las palabras en el array "words" (empezando en 0). Asegúrate de que las cajas complejas abarquen exactamente el rango correcto sin solapar etiquetas vecinas en el mismo nivel.
+2. Jerarquía estricta de niveles (level):
+   - Level 1: Clases de palabras / categorías (D, N, V, E, Pron, Conj, etc.).
+   - Level 2: Sintagmas inmediatos (SN, SV, S.Prep, S.Adj).
+   - Level 3 o superior: Funciones sintácticas complejas (Sujeto, CD, CI, Atributo, CC, Proposiciones Subordinadas).
+3. Nunca pongas dos etiquetas distintas que ocupen exactamente las mismas palabras en el mismo "level". Si una estructura contiene a otra, su "level" debe ser estrictamente mayor.
+4. Colores obligatorios:
+   - "cSuj" (Azul): Sujetos y sus componentes.
+   - "cNuc" (Rojo): Predicados y Núcleos verbales.
+   - "cObl" (Naranja): Complementos argumentales (CD, CI, Atributo, C.Rég) y subordinadas sustantivas.
+   - "cOpt" (Verde): Adjuntos (CC) y subordinadas adjetivas/adverbiales.
+   - "cOrac" (Gris): Estructuras oracionales generales y nexos (Nx).
+"""
 
+            # 3. Llamada a la API con sistema en cascada
+            modelos_disponibles = ["gemini-1.5-flash", "gemini-2.5-flash", "gemini-1.5-pro"]
             res_data = None
             error_detalles = ""
 
@@ -78,7 +83,6 @@ REGLAS:
                 }
                 headers = {"Content-Type": "application/json"}
 
-                # Intentos por cada modelo en caso de congestión puntual
                 modelo_exitoso = False
                 for intento in range(2):
                     response = requests.post(url, json=payload, headers=headers)
@@ -89,10 +93,10 @@ REGLAS:
                     else:
                         error_detalles = f"[{modelo}] {response.text}"
                         if response.status_code in [429, 503]:
-                            time.sleep(1) # Breve pausa antes del reintento
+                            time.sleep(1)
 
                 if modelo_exitoso:
-                    break # Si un modelo responde con éxito, salimos del bucle de modelos
+                    break
 
             if res_data and "candidates" in res_data:
                 json_text = res_data['candidates'][0]['content']['parts'][0]['text']
@@ -101,7 +105,7 @@ REGLAS:
                 words = data.get("words", [])
                 analysis = data.get("analysis", [])
 
-                # 4. ALGORITMO DE AUTOCORRECCIÓN DE NIVEL EN PYTHON
+                # 4. ALGORITMO ANTISOLAPAMIENTO Y AUTOCORRECCIÓN DE NIVELES
                 changed = True
                 while changed:
                     changed = False
@@ -114,18 +118,18 @@ REGLAS:
                             s1, e1, l1 = item1.get("start", 0), item1.get("end", 0), item1.get("level", 1)
                             s2, e2, l2 = item2.get("start", 0), item2.get("end", 0), item2.get("level", 1)
 
-                            if (s1 <= s2 and e1 >= e2) and (e1 - s1 > e2 - s2):
-                                if l1 <= l2:
-                                    item1["level"] = l2 + 1
-                                    changed = True
-                            elif max(s1, s2) <= min(e1, e2) and l1 == l2:
+                            # Si se solapan parcialmente o una contiene a otra en el mismo nivel, escalamos niveles
+                            if l1 == l2 and max(s1, s2) <= min(e1, e2):
                                 if (e1 - s1) >= (e2 - s2):
                                     item1["level"] = l2 + 1
                                 else:
                                     item2["level"] = l1 + 1
                                 changed = True
+                            elif (s1 <= s2 and e1 >= e2) and (e1 - s1 > e2 - s2) and l1 <= l2:
+                                item1["level"] = l2 + 1
+                                changed = True
 
-                # 5. GENERACIÓN DEL CÓDIGO TIKZ / LATEX
+                # 5. GENERACIÓN DEL CÓDIGO TIKZ / LATEX CON SEPARACIÓN VERTICAL ÓPTIMA
                 tikz_elements = []
 
                 for i, w in enumerate(words):
@@ -137,7 +141,7 @@ REGLAS:
 
                 max_level = max([item.get("level", 1) for item in analysis], default=5)
                 for lvl in range(1, max_level + 1):
-                    y_pos = -0.85 * lvl
+                    y_pos = -0.9 * lvl  # Espaciado vertical ligeramente mayor para evitar solapamientos visuales
                     tikz_elements.append(f'    \\coordinate (y{lvl}) at (0, {y_pos:.2f});')
 
                 for item in analysis:
@@ -148,7 +152,7 @@ REGLAS:
                     color = item.get("color", "cOrac")
 
                     tikz_elements.append(
-                        f'    \\draw[{color}, line width=1.3pt] (w{start}.west |- y{lvl}) -- (w{end}.east |- y{lvl}) node[midway, below, tag, {color}] {{{label}}};'
+                        f'    \\draw[{color}, line width=1.2pt] (w{start}.west |- y{lvl}) -- (w{end}.east |- y{lvl}) node[midway, below, tag, {color}] {{{label}}};'
                     )
 
                 tikz_body = "\n".join(tikz_elements)
@@ -172,8 +176,8 @@ REGLAS:
 
 \\begin{{document}}
 \\begin{{tikzpicture}}[
-    node distance=0.45cm,
-    word/.style={{font=\\bfseries\\Large, inner xsep=4pt, inner ysep=2pt}},
+    node distance=0.5cm,
+    word/.style={{font=\\bfseries\\Large, inner xsep=5pt, inner ysep=3pt}},
     tag/.style={{font=\\small\\bfseries, inner sep=2pt}}
 ]
 
@@ -203,24 +207,23 @@ REGLAS:
                         stderr=subprocess.DEVNULL,
                     )
 
-                # Limpieza de archivos secundarios .aux y .log
                 for temp in ["analisis.aux", "analisis.log"]:
                     if os.path.exists(temp):
                         os.remove(temp)
 
                 # 7. Renderizado en Streamlit
                 if os.path.exists("analisis_out.png"):
-                    st.image("analisis_out.png", caption=f"Análisis Sintáctico: {oracion}", use_container_width=True)
+                    st.image("analisis_out.png", caption=f"Análisis Sintáctico (NGLE): {oracion}", use_container_width=True)
 
                     with open("analisis.pdf", "rb") as pdf_file:
                         st.download_button(
                             label="📄 Descargar diagrama en PDF",
                             data=pdf_file,
-                            file_name="analisis_sintactico.pdf",
+                            file_name="analisis_sintactico_ngle.pdf",
                             mime="application/pdf"
                         )
                 else:
                     if proceso_latex.returncode == 0:
-                        st.error("Error al generar la imagen con pdftoppm. Revisa los paquetes de poppler-utils.")
+                        st.error("Error al generar la imagen con pdftoppm.")
             else:
-                st.error(f"Todos los modelos alternativos están saturados temporalmente. Detalles del error: {error_detalles}")
+                st.error(f"Error al procesar la oración. Detalles: {error_detalles}")
