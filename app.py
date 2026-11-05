@@ -8,22 +8,20 @@ import time
 
 # Configuración de la página
 st.set_page_config(
-    page_title="Analizador Sintáctico - Bachillerato NGLE (Qwen)", layout="wide"
+    page_title="Analizador Sintáctico - Bachillerato NGLE (Gemini)", layout="wide"
 )
-st.title("📐 Generador de Cajas Sintácticas (Motor Qwen - NGLE)")
+st.title("📐 Generador de Cajas Sintácticas (Motor Gemini - NGLE)")
 
 # --- Configuración de la API Key en la barra lateral ---
 st.sidebar.header("⚙️ Configuración")
-user_api_key = st.sidebar.text_input(
-    "Introduce tu Qwen (DashScope) API Key:", type="password"
-)
+user_api_key = st.sidebar.text_input("Introduce tu Gemini API Key:", type="password")
 
 api_key = user_api_key.strip().strip('"').strip("'")
 api_key = re.sub(r"[^\w\.-]", "", api_key)
 
 if not api_key:
     st.warning(
-        "Por favor, introduce tu API Key de Qwen en el menú lateral para poder utilizar la aplicación."
+        "Por favor, introduce tu Gemini API Key en el menú lateral para poder utilizar la aplicación."
     )
     st.stop()
 
@@ -37,10 +35,14 @@ if st.button("Analizar Oración"):
     if not oracion.strip():
         st.warning("Por favor, escribe una oración.")
     elif not api_key:
-        st.sidebar.error("Error: Por favor, introduce tu API Key en la barra lateral.")
-        st.error("Error: API Key no configurada.")
+        st.sidebar.error(
+            "Error: Por favor, introduce tu Gemini API Key en la barra lateral."
+        )
+        st.error("Error: GEMINI_API_KEY no está configurada.")
     else:
-        with st.spinner("Analizando sintaxis con rigor estricto NGLE mediante Qwen..."):
+        with st.spinner(
+            "Analizando sintaxis con rigor estricto NGLE mediante Gemini..."
+        ):
             # 1. Borrar archivos temporales antiguos
             for f in ["analisis.pdf", "analisis_out.png", "analisis.tex"]:
                 if os.path.exists(f):
@@ -75,36 +77,43 @@ REGLAS DE ORO:
    - "cOrac" (Gris): Estructura oracional general y nexos (Nx).
 """
 
-            # 3. Endpoint oficial de Qwen (DashScope compatible con formato OpenAI)
-            url = "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions"
-
-            payload = {
-                "model": "qwen-plus",
-                "messages": [{"role": "user", "content": prompt}],
-                "response_format": {"type": "json_object"},
-                "temperature": 0.0,  # Temperatura a 0 para garantizar análisis deterministas y estables
-            }
-
-            headers = {
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {api_key}",
-            }
-
+            # 3. Llamada a la API de Gemini con temperatura 0.0 (determinista) y modelos en cascada
+            modelos_disponibles = [
+                "gemini-1.5-flash",
+                "gemini-2.5-flash",
+                "gemini-1.5-pro",
+            ]
             res_data = None
             error_detalles = ""
 
-            for intento in range(2):
-                response = requests.post(url, json=payload, headers=headers)
-                if response.status_code == 200:
-                    res_data = response.json()
-                    break
-                else:
-                    error_detalles = response.text
-                    if response.status_code in [429, 503]:
-                        time.sleep(1)
+            for modelo in modelos_disponibles:
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{modelo}:generateContent?key={api_key}"
+                payload = {
+                    "contents": [{"parts": [{"text": prompt}]}],
+                    "generationConfig": {
+                        "response_mime_type": "application/json",
+                        "temperature": 0.0,  # Obligatorio para evitar variaciones y asegurar rigor determinista
+                    },
+                }
+                headers = {"Content-Type": "application/json"}
 
-            if res_data and "choices" in res_data:
-                json_text = res_data["choices"][0]["message"]["content"]
+                modelo_exitoso = False
+                for intento in range(2):
+                    response = requests.post(url, json=payload, headers=headers)
+                    if response.status_code == 200:
+                        res_data = response.json()
+                        modelo_exitoso = True
+                        break
+                    else:
+                        error_detalles = f"[{modelo}] {response.text}"
+                        if response.status_code in [429, 503]:
+                            time.sleep(1)
+
+                if modelo_exitoso:
+                    break
+
+            if res_data and "candidates" in res_data:
+                json_text = res_data["candidates"][0]["content"]["parts"][0]["text"]
                 data = json.loads(json_text)
 
                 words = data.get("words", [])
@@ -245,7 +254,7 @@ REGLAS DE ORO:
                 if os.path.exists("analisis_out.png"):
                     st.image(
                         "analisis_out.png",
-                        caption=f"Análisis Sintáctico (Qwen - NGLE): {oracion}",
+                        caption=f"Análisis Sintáctico (Gemini - NGLE): {oracion}",
                         use_container_width=True,
                     )
 
@@ -253,7 +262,7 @@ REGLAS DE ORO:
                         st.download_button(
                             label="📄 Descargar diagrama en PDF",
                             data=pdf_file,
-                            file_name="analisis_sintactico_qwen.pdf",
+                            file_name="analisis_sintactico_gemini.pdf",
                             mime="application/pdf",
                         )
                 else:
@@ -261,5 +270,5 @@ REGLAS DE ORO:
                         st.error("Error al generar la imagen con pdftoppm.")
             else:
                 st.error(
-                    f"Error al procesar la oración con Qwen. Detalles: {error_detalles}"
+                    f"Error al procesar la oración con Gemini. Detalles: {error_detalles}"
                 )
