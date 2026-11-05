@@ -43,9 +43,9 @@ if st.button("Analizar Oración"):
                 if os.path.exists(f):
                     os.remove(f)
 
-            # 2. Prompt pedagógico optimizado (menor consumo de tokens)
-            prompt = f"""Analiza sintácticamente para 1º Bachillerato: "{oracion}".
-Devuelve ÚNICAMENTE un JSON válido con esta estructura exacta:
+# 2. Prompt pedagógico compacto y riguroso (NGLE / 1º Bachillerato)
+            prompt = f"""Analiza sintácticamente según la NGLE (RAE) la oración: "{oracion}".
+Devuelve ÚNICAMENTE un JSON válido con esta estructura:
 {{
   "words": ["palabra1", "palabra2"],
   "analysis": [
@@ -54,9 +54,10 @@ Devuelve ÚNICAMENTE un JSON válido con esta estructura exacta:
   ]
 }}
 REGLAS:
-1. Sujeto omitido (SO): Si no hay sujeto explícito, inclúyelo en el Predicado (ej: "SV / PV (SO: ellos)").
-2. Niveles (level): Level 1 = categorías (D,N,V,E...); Level 2+ = sintagmas y complementos. Las cajas contenedoras deben tener level mayor que las contenidas.
-3. Colores: "cSuj" (Azul-Sujeto), "cNuc" (Rojo-Predicado/Verbo), "cObl" (Naranja-Argumentales/CD/CI/Atrib), "cOpt" (Verde-CC/Adjuntos), "cOrac" (Gris-Oración/Nexos)."""
+1. Aplique criterios estrictos de la NGLE (delimitación de proposiciones subordinadas, nexos Nx, perífrasis, etc.).
+2. Si no hay sujeto explícito, indique el Sujeto Omitido en el Predicado (ej: "SV / PV (SO: él)").
+3. Jerarquía de niveles (level): Level 1 = palabras; Level 2+ = sintagmas y complementos. Las cajas contenedoras deben tener level superior a las contenidas.
+4. Colores: "cSuj" (Azul-Sujeto), "cNuc" (Rojo-Predicado/Verbo), "cObl" (Naranja-Argumentales/CD/CI/Atrib), "cOpt" (Verde-CC/Adjuntos), "cOrac" (Gris-Oración/Nexos)."""
 
             # 3. Lista de modelos en cascada (Fallback automático ante saturación)
             # Si el primero falla por tráfico (429/503), prueba automáticamente con los siguientes.
