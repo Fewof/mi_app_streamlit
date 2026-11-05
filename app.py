@@ -36,65 +36,62 @@ if st.button("Analizar Oración"):
         st.sidebar.error("Error: Por favor, introduce tu Gemini API Key en la barra lateral.")
         st.error("Error: GEMINI_API_KEY no está configurada.")
     else:
-        with st.spinner("Analizando oración y calculando niveles..."):
+        with st.spinner("Analizando oración y calculando niveles (buscando ruta óptima)..."):
             
             # 1. Borrar archivos temporales antiguos
             for f in ["analisis.pdf", "analisis_out.png", "analisis.tex"]:
                 if os.path.exists(f):
                     os.remove(f)
 
-            # 2. Prompt pedagógico estructurado (JSON)
-            prompt = f"""
-Analiza sintácticamente la siguiente oración para 1º de Bachillerato en España: "{oracion}".
-
-Devuelve ÚNICAMENTE un objeto JSON válido con esta estructura:
+            # 2. Prompt pedagógico optimizado (menor consumo de tokens)
+            prompt = f"""Analiza sintácticamente para 1º Bachillerato: "{oracion}".
+Devuelve ÚNICAMENTE un JSON válido con esta estructura exacta:
 {{
-  "words": ["palabra1", "palabra2", ...],
+  "words": ["palabra1", "palabra2"],
   "analysis": [
     {{"level": 1, "start": 0, "end": 0, "label": "D", "color": "cSuj"}},
     {{"level": 1, "start": 1, "end": 1, "label": "N", "color": "cSuj"}}
   ]
 }}
+REGLAS:
+1. Sujeto omitido (SO): Si no hay sujeto explícito, inclúyelo en el Predicado (ej: "SV / PV (SO: ellos)").
+2. Niveles (level): Level 1 = categorías (D,N,V,E...); Level 2+ = sintagmas y complementos. Las cajas contenedoras deben tener level mayor que las contenidas.
+3. Colores: "cSuj" (Azul-Sujeto), "cNuc" (Rojo-Predicado/Verbo), "cObl" (Naranja-Argumentales/CD/CI/Atrib), "cOpt" (Verde-CC/Adjuntos), "cOrac" (Gris-Oración/Nexos)."""
 
-REGLAS PEDAGÓGICAS Y ESTRUCTURALES OBLIGATORIAS:
-
-1. TRATAMIENTO OBLIGATORIO DE SUJETOS OMITIDOS / ELÍPTICOS (SO):
-   - Si un verbo principal o subordinado NO tiene sujeto explícito en la oración, ES OBLIGATORIO incluir el Sujeto Omitido en la etiqueta del Predicado entre paréntesis.
-   - Ejemplo: "SV / PV (SO: ellos)", "SV / PV (SO: él/ella)", "SV / PV (SO: tú)".
-
-2. ALINEACIÓN Y NIVELES VERTICALES (level):
-   - Level 1: Categorías gramaticales individuales de TODAS las palabras (D, N, V, E, Nx...).
-   - Level 2: Sintagmas simples inmediatos, Términos ("SN / T") y CD/CI/CC internos.
-   - En CUALQUIER cláusula, el "SN / Suj" explícito y el "SV / PV" que están al mismo nivel sintáctico DEBEN compartir el mismo "level" (siempre que no se contengan).
-   - NINGUNA caja/línea que contenga a otra puede tener un "level" menor o igual al de la caja contenida.
-
-3. REGLAS ESTRICTAS DE COLOR:
-   - "cSuj" (Azul): Sujetos explícitos (principales o subordinados) y sus componentes internos.
-   - "cNuc" (Rojo): Predicados ("SV / PV") y Verbos ("V").
-   - "cObl" (Naranja): Complementos ARGUMENTALES ("CD", "CI", "Atributo", "C.Rég.") y Subordinadas Sustantivas.
-   - "cOpt" (Verde): Complementos ADJUNTOS/CIRCUNSTANCIALES (CC) y Subordinadas Adverbiales o Adjetivas (CN).
-   - "cOrac" (Gris): La línea general "Oración Compuesta" / "Oración Simple" y Nexos (Nx).
-"""
-
-            # 3. Llamada a la API de Gemini con el modelo correcto
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key={api_key}"
-            payload = {
-                "contents": [{"parts": [{"text": prompt}]}],
-                "generationConfig": {"response_mime_type": "application/json"}
-            }
-            headers = {"Content-Type": "application/json"}
+            # 3. Lista de modelos en cascada (Fallback automático ante saturación)
+            # Si el primero falla por tráfico (429/503), prueba automáticamente con los siguientes.
+            modelos_disponibles = [
+                "gemini-1.5-flash",
+                "gemini-2.5-flash",
+                "gemini-1.5-pro"
+            ]
 
             res_data = None
             error_detalles = ""
-            for intento in range(3):
-                response = requests.post(url, json=payload, headers=headers)
-                if response.status_code == 200:
-                    res_data = response.json()
-                    break
-                else:
-                    error_detalles = response.text
-                    if response.status_code == 503:
-                        time.sleep(2)
+
+            for modelo in modelos_disponibles:
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{modelo}:generateContent?key={api_key}"
+                payload = {
+                    "contents": [{"parts": [{"text": prompt}]}],
+                    "generationConfig": {"response_mime_type": "application/json"}
+                }
+                headers = {"Content-Type": "application/json"}
+
+                # Intentos por cada modelo en caso de congestión puntual
+                modelo_exitoso = False
+                for intento in range(2):
+                    response = requests.post(url, json=payload, headers=headers)
+                    if response.status_code == 200:
+                        res_data = response.json()
+                        modelo_exitoso = True
+                        break
+                    else:
+                        error_detalles = f"[{modelo}] {response.text}"
+                        if response.status_code in [429, 503]:
+                            time.sleep(1) # Breve pausa antes del reintento
+
+                if modelo_exitoso:
+                    break # Si un modelo responde con éxito, salimos del bucle de modelos
 
             if res_data and "candidates" in res_data:
                 json_text = res_data['candidates'][0]['content']['parts'][0]['text']
@@ -225,4 +222,4 @@ REGLAS PEDAGÓGICAS Y ESTRUCTURALES OBLIGATORIAS:
                     if proceso_latex.returncode == 0:
                         st.error("Error al generar la imagen con pdftoppm. Revisa los paquetes de poppler-utils.")
             else:
-                st.error(f"Error de la API de Gemini: {error_detalles}")
+                st.error(f"Todos los modelos alternativos están saturados temporalmente. Detalles del error: {error_detalles}")
